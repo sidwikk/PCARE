@@ -1,30 +1,70 @@
-import axios from 'axios';
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const context = canvas.getContext("2d");
+const status = document.getElementById("status");
 
-const loadImageBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = (error) => reject(error);
+// Roboflow Model Info
+const ROBOFLOW_API_KEY = "n2X7gQwFwVV9sftqam36";
+const ROBOFLOW_PROJECT = "superworms-1r3ob";
+const ROBOFLOW_VERSION = 1;
+const API_URL = `https://detect.roboflow.com/${ROBOFLOW_PROJECT}/${ROBOFLOW_VERSION}?api_key=${ROBOFLOW_API_KEY}`;
+
+// Start webcam stream
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then((stream) => {
+    video.srcObject = stream;
+  })
+  .catch((err) => {
+    console.error("Webcam error:", err);
+    status.innerText = "❌ Webcam access error";
+  });
+
+function detect() {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0);
+
+  canvas.toBlob((blob) => {
+    const formData = new FormData();
+    formData.append("image", blob);
+
+    fetch(API_URL, {
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("Predictions:", data);
+
+      if (data.predictions && data.predictions.length > 0) {
+        status.innerText = "🪱 Worm detected!";
+        drawBoxes(data.predictions);
+      } else {
+        status.innerText = "✅ No pests detected.";
+        context.drawImage(video, 0, 0); // clear canvas from last boxes
+      }
+    })
+    .catch(err => {
+      console.error("Detection error:", err);
+      status.innerText = "⚠️ Detection failed.";
     });
+  }, "image/jpeg");
 }
 
-const image = await loadImageBase64(fileData);
+function drawBoxes(predictions) {
+  context.drawImage(video, 0, 0);
+  context.lineWidth = 2;
+  context.strokeStyle = "red";
+  context.fillStyle = "red";
+  context.font = "18px Arial";
 
-axios({
-    method: "POST",
-    url: "https://serverless.roboflow.com/superworms-1r3ob/1",
-    params: {
-        api_key: "n2X7gQwFwVV9sftqam36"
-    },
-    data: image,
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-})
-.then(function(response) {
-    console.log(response.data);
-})
-.catch(function(error) {
-    console.log(error.message);
-});
+  predictions.forEach(pred => {
+    const x = pred.x - pred.width / 2;
+    const y = pred.y - pred.height / 2;
+    context.strokeRect(x, y, pred.width, pred.height);
+    context.fillText(`${pred.class} ${Math.round(pred.confidence * 100)}%`, x, y - 5);
+  });
+}
+
+// Run detection every 2 seconds
+setInterval(detect, 2000);
