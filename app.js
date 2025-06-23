@@ -4,8 +4,8 @@ const context = canvas.getContext("2d");
 const status = document.getElementById("status");
 
 // Roboflow Model Info
-const ROBOFLOW_API_KEY = "n2X7gQwFwVV9sftqam36";  // <-- your key
-const ROBOFLOW_PROJECT = "superworms-1r3ob";       // <-- your Roboflow project
+const ROBOFLOW_API_KEY = "n2X7gQwFwVV9sftqam36";
+const ROBOFLOW_PROJECT = "superworms-1r3ob";
 const ROBOFLOW_VERSION = 1;
 const API_URL = `https://detect.roboflow.com/${ROBOFLOW_PROJECT}/${ROBOFLOW_VERSION}?api_key=${ROBOFLOW_API_KEY}`;
 
@@ -13,6 +13,16 @@ const API_URL = `https://detect.roboflow.com/${ROBOFLOW_PROJECT}/${ROBOFLOW_VERS
 navigator.mediaDevices.getUserMedia({ video: true })
   .then((stream) => {
     video.srcObject = stream;
+
+    // ⏳ Wait until video dimensions are known
+    video.onloadedmetadata = () => {
+      // Match canvas to video size
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Start detection loop
+      setInterval(detect, 2000);
+    };
   })
   .catch((err) => {
     console.error("Webcam error:", err);
@@ -21,12 +31,10 @@ navigator.mediaDevices.getUserMedia({ video: true })
 
 function detect() {
   if (video.videoWidth === 0 || video.videoHeight === 0) {
-    return; // Skip detection if video not ready yet
+    return;
   }
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0);
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   canvas.toBlob((blob) => {
     const formData = new FormData();
@@ -45,7 +53,7 @@ function detect() {
         drawBoxes(data.predictions);
       } else {
         status.innerText = "✅ No pests detected.";
-        context.drawImage(video, 0, 0); // Clear old boxes
+        context.drawImage(video, 0, 0); // Clear canvas
       }
     })
     .catch(err => {
@@ -56,7 +64,7 @@ function detect() {
 }
 
 function drawBoxes(predictions) {
-  context.drawImage(video, 0, 0);
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
   context.lineWidth = 2;
   context.strokeStyle = "red";
   context.fillStyle = "red";
@@ -69,6 +77,3 @@ function drawBoxes(predictions) {
     context.fillText(`${pred.class} ${Math.round(pred.confidence * 100)}%`, x, y - 5);
   });
 }
-
-// Run detection every 2 seconds
-setInterval(detect, 2000);
