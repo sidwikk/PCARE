@@ -2,65 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PCARE: Worm Detector</title>
+  <title>Worm Detector - PCARE</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      background: #f0f4f8;
-    }
+  body {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    background: #f0f4f8;
+  }
+  video, canvas {
+    width: 70%;
+    height: 600px;        /* 👈 Your desired height */
+    object-fit: cover;    /* 👈 This crops/stretch the video to fill */
+    margin-top: 10px;
+    border-radius: 12px;
+  }
 
-    /* Force the video to be invisible */
-    video {
-      display: none !important;
-    }
 
-    canvas {
-      width: 70%;
-      height: 600px;
-      object-fit: cover;
-      margin-top: 10px;
-      border-radius: 12px;
-    }
+  #status {
+    margin: 10px;
+    font-weight: bold;
+  }
+</style>
 
-    #status {
-      margin: 10px;
-      font-weight: bold;
-      font-size: 20px;
-    }
-  </style>
+
 </head>
 <body>
 
   <h1>🪱 PCARE: Worm Detector</h1>
 
-  <!-- Hidden video source -->
-  <video id="video" autoplay muted playsinline></video>
+  <video id="webcam" autoplay muted playsinline></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <div id="status">Waiting for Roboflow model...</div>
 
-  <!-- Visible canvas only -->
-  <canvas id="canvas"></canvas>
+  <script src="https://unpkg.com/@roboflow/js"></script>
+  <script>
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const status = document.getElementById("status");
 
-  <div id="status">Waiting for detection...</div>
+    let model = null;
 
-  <script src="app.js"></script>
+    // Optional: Preload the Roboflow model if you have credentials
+    const loadModel = async () => {
+      try {
+        // ⚠️ Replace with your actual Roboflow info once ready
+        const apiKey = "n2X7gQwFwVV9sftqam36";
+        const modelName = "superworms-1r3ob";
+        const version = "1"; // Usually 1 or latest
 
-</body>
-</html>
+        const roboflow = new window.roboflow.Auth(apiKey);
+        model = await roboflow.load({ model: modelName, version: version });
+        status.textContent = "✅ Model loaded. Detecting worms...";
+      } catch (e) {
+        console.warn("Model not loaded yet. This is a starter app.");
+        status.textContent = "🕐 No model loaded. Demo only.";
+      }
+    };
 
-<body>
+    const startWebcam = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+      video.srcObject = stream;
 
-  <h1>🪱 PCARE: Worm Detector</h1>
+      video.onloadedmetadata = () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        detectLoop();
+      };
+    };
 
-  <!-- Hidden video source -->
-  <video id="video" autoplay muted playsinline style="display: none;"></video>
+    const detectLoop = async () => {
+      if (model) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const prediction = await model.detect(canvas);
+        console.log(prediction);
+        // Optional: draw boxes here
+      }
+      requestAnimationFrame(detectLoop);
+    };
 
-  <!-- Visible canvas with detections -->
-  <canvas id="canvas"></canvas>
-
-  <div id="status">Waiting for detection...</div>
-
-  <script src="app.js"></script>
+    // Start webcam and optionally load model
+    startWebcam();
+    loadModel();
+  </script src="app.js"></script>
 
 </body>
 </html>
