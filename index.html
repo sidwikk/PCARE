@@ -10,6 +10,12 @@
       text-align: center;
       background: #f0f4f8;
     }
+
+    /* Force the video to be invisible */
+    video {
+      display: none !important;
+    }
+
     canvas {
       width: 70%;
       height: 600px;
@@ -17,6 +23,7 @@
       margin-top: 10px;
       border-radius: 12px;
     }
+
     #status {
       margin: 10px;
       font-weight: bold;
@@ -24,6 +31,23 @@
     }
   </style>
 </head>
+<body>
+
+  <h1>🪱 PCARE: Worm Detector</h1>
+
+  <!-- Hidden video source -->
+  <video id="video" autoplay muted playsinline></video>
+
+  <!-- Visible canvas only -->
+  <canvas id="canvas"></canvas>
+
+  <div id="status">Waiting for detection...</div>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
+
 <body>
 
   <h1>🪱 PCARE: Worm Detector</h1>
