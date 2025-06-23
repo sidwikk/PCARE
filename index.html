@@ -10,7 +10,7 @@
       text-align: center;
       background: #f0f4f8;
     }
-    video, canvas {
+    canvas {
       width: 70%;
       height: 600px;
       object-fit: cover;
@@ -28,8 +28,12 @@
 
   <h1>🪱 PCARE: Worm Detector</h1>
 
-  <video id="video" autoplay muted playsinline></video>
+  <!-- Hidden video source -->
+  <video id="video" autoplay muted playsinline style="display: none;"></video>
+
+  <!-- Visible canvas with detections -->
   <canvas id="canvas"></canvas>
+
   <div id="status">Waiting for detection...</div>
 
   <script src="app.js"></script>
