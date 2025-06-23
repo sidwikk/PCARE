@@ -4,8 +4,8 @@ const context = canvas.getContext("2d");
 const status = document.getElementById("status");
 
 // Roboflow Model Info
-const ROBOFLOW_API_KEY = "n2X7gQwFwVV9sftqam36";
-const ROBOFLOW_PROJECT = "superworms-1r3ob";
+const ROBOFLOW_API_KEY = "n2X7gQwFwVV9sftqam36";  // <-- your key
+const ROBOFLOW_PROJECT = "superworms-1r3ob";       // <-- your Roboflow project
 const ROBOFLOW_VERSION = 1;
 const API_URL = `https://detect.roboflow.com/${ROBOFLOW_PROJECT}/${ROBOFLOW_VERSION}?api_key=${ROBOFLOW_API_KEY}`;
 
@@ -20,6 +20,10 @@ navigator.mediaDevices.getUserMedia({ video: true })
   });
 
 function detect() {
+  if (video.videoWidth === 0 || video.videoHeight === 0) {
+    return; // Skip detection if video not ready yet
+  }
+
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   context.drawImage(video, 0, 0);
@@ -36,12 +40,12 @@ function detect() {
     .then(data => {
       console.log("Predictions:", data);
 
-      if (data.predictions && data.predictions.length > 0) {
+      if (data?.predictions?.length > 0) {
         status.innerText = "🪱 Worm detected!";
         drawBoxes(data.predictions);
       } else {
         status.innerText = "✅ No pests detected.";
-        context.drawImage(video, 0, 0); // clear canvas from last boxes
+        context.drawImage(video, 0, 0); // Clear old boxes
       }
     })
     .catch(err => {
