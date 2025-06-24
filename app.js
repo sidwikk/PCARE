@@ -4,9 +4,9 @@ const context = canvas.getContext("2d");
 const status = document.getElementById("status");
 
 // Roboflow Model Info
-const ROBOFLOW_API_KEY = "n2X7gQwFwVV9sftqam36";
-const ROBOFLOW_PROJECT = "uod-detection";
+const ROBOFLOW_PROJECT = "superworms-detection";
 const ROBOFLOW_VERSION = 1;
+const ROBOFLOW_API_KEY = "rf_x6rRLycZ2vfvQptIykrl";
 const API_URL = `https://detect.roboflow.com/${ROBOFLOW_PROJECT}/${ROBOFLOW_VERSION}?api_key=${ROBOFLOW_API_KEY}`;
 
 // Use back camera if available
